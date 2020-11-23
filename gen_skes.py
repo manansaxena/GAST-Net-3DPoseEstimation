@@ -147,7 +147,7 @@ def generate_skeletons(video='', rf=27, output_animation=False, num_person=1, ab
         anim_output.update({'Reconstruction %d' % (i+1): anim_prediction})
 
     if output_animation:
-        viz_output = './output/' + 'animation_' + video.split('/')[-1].split('.')[0] + '.mp4'
+        viz_output = args.output_dir +'/' + 'animation_' + video.split('/')[-1].split('.')[0] + '.mp4'
         print('Generating animation ...')
         # re_kpts: (M, T, N, 2) --> (T, M, N, 2)
         re_kpts = re_kpts.transpose(1, 0, 2, 3)
@@ -155,7 +155,7 @@ def generate_skeletons(video='', rf=27, output_animation=False, num_person=1, ab
                          viz_output, input_video_path=video, viewport=(width, height), com_reconstrcution=same_coord)
     else:
         print('Saving 3D reconstruction...')
-        output_npz = './output/' + video.split('/')[-1].split('.')[0] + '.npz'
+        output_npz = args.output_dir +'/' + video.split('/')[-1].split('.')[0] + '.npz'
         np.savez_compressed(output_root+output_npz, reconstruction=prediction)
         print('Completing saving...')
 
@@ -169,6 +169,7 @@ def arg_parse():
     parser.add_argument('-v', '--video', type=str, default='baseball.mp4', help='input video')
     parser.add_argument('-a', '--animation', action='store_true', help='output animation')
     parser.add_argument('-np', '--num-person', type=int, default=1, help='number of estimated human poses. [1, 2]')
+    parser.add_argument('-o','--output_dir',type=str)
     args = parser.parse_args()
 
     return args
@@ -176,5 +177,5 @@ def arg_parse():
 
 if __name__ == "__main__":
     args = arg_parse()
-    video_path = data_root + 'video/' + args.video
+    video_path = args.video
     generate_skeletons(video=video_path, output_animation=args.animation, num_person=args.num_person)
