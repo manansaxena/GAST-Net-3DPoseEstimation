@@ -54,6 +54,7 @@ def parse_args():
                         help='The maximum number of estimated poses')
     parser.add_argument("-v", "--video", type=str, default='camera',
                         help="input video file name")
+    parser.add_argument('-o','--output_dir',type=str)
     args = parser.parse_args()
 
     return args
