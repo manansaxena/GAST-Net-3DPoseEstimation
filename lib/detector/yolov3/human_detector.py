@@ -73,6 +73,7 @@ def arg_parse():
     parser.add_argument('-i', '--image', type=str, default=cur_dir + '/data/dog-cycle-car.png',
                         help='The input video path')
     parser.add_argument('-np', '--num-person', type=int, default=1, help='number of estimated human poses. [1, 2]')
+    parser.add_argument('-o','--output_dir',type=str)
     return parser.parse_args()
 
 
