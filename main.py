@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from common.loss import mpjpe, p_mpjpe
+from common.loss import mpjpe, p_mpjpe, bone_loss
 from common.camera import *
 from tools.utils import deterministic_random
 from common.graph_utils import adj_mx_from_skeleton
@@ -242,6 +242,8 @@ def load_weight(args, model_pos_train, model_pos):
 
 def train(model_pos_train, train_generator, optimizer):
     epoch_loss_3d_train = 0
+    epoch_loss_mpjpe_train = 0
+    epoch_loss_bl_train = 0
     N = 0
     
     # Regular supervised scenario
@@ -258,9 +260,11 @@ def train(model_pos_train, train_generator, optimizer):
 
         # Predict 3D poses
         predicted_3d_pos = model_pos_train(inputs_2d)
-        loss_3d_pos = mpjpe(predicted_3d_pos, inputs_3d)
+        loss_3d_pos = mpjpe(predicted_3d_pos, inputs_3d) + bone_loss(predicted_3d_pos,inputs_3d)
 
         epoch_loss_3d_train += inputs_3d.shape[0] * inputs_3d.shape[1] * loss_3d_pos.item()
+        epoch_loss_mpjpe_train += inputs_3d.shape[0] * inputs_3d.shape[1] * mpjpe(predicted_3d_pos, inputs_3d).item()
+        epoch_loss_bl_train += inputs_3d.shape[0] * inputs_3d.shape[1] * bone_loss(predicted_3d_pos,inputs_3d).item()
         N += inputs_3d.shape[0] * inputs_3d.shape[1]
 
         loss_total = loss_3d_pos
@@ -269,8 +273,10 @@ def train(model_pos_train, train_generator, optimizer):
         optimizer.step()
 
     epoch_losses_eva = epoch_loss_3d_train / N
-    
-    return epoch_losses_eva
+    epoch_loss_mpjpe_eva = epoch_loss_mpjpe_train / N
+    epoch_loss_bl_eva = epoch_loss_bl_train / N
+
+    return epoch_losses_eva,epoch_loss_mpjpe_eva,epoch_loss_bl_eva
 
 
 def eval(model_train_dict, model_pos, test_generator, train_generator_eval):

@@ -69,6 +69,8 @@ if not args.evaluate:
     losses_3d_train = []
     losses_3d_train_eval = []
     losses_3d_valid = []
+    losses_mpjpe_train = []
+    losses_bl_train = []
 
     epoch = 0
     initial_momentum = 0.1
@@ -104,8 +106,10 @@ if not args.evaluate:
         model_pos_train.train()
 
         # Regular supervised scenario
-        epoch_loss_3d = train(model_pos_train, train_generator, optimizer)
+        epoch_loss_3d,epoch_mpjpe_3d,epoch_bl_3d = train(model_pos_train, train_generator, optimizer)
         losses_3d_train.append(epoch_loss_3d)
+        losses_mpjpe_train.append(epoch_mpjpe_3d)
+        losses_bl_train.append(epoch_bl_3d)
 
         # After training an epoch, whether to evaluate the loss of the training and validation set
         if not args.no_eval:
@@ -123,13 +127,18 @@ if not args.evaluate:
                     lr,
                     losses_3d_train[-1] * 1000))
         else:
-            print('[%d] time %.2f lr %f 3d_train %f 3d_eval %f 3d_valid %f' % (
+            print('[%d] time %.2f lr %f 3d_train %f bl_loss %f mpjpe_loss %f 3d_eval %f 3d_valid %f' % (
                     epoch + 1,
                     elapsed,
                     lr,
-                    losses_3d_train[-1] * 1000,
-                    losses_3d_train_eval[-1] * 1000,
-                    losses_3d_valid[-1] * 1000))
+                    # losses_3d_train[-1] * 1000,
+                    # losses_3d_train_eval[-1] * 1000,
+                    # losses_3d_valid[-1] * 1000))
+                    losses_3d_train[-1]*1000,
+                    losses_bl_train[-1]*1000,
+                    losses_mpjpe_train[-1]*1000,
+                    losses_3d_train_eval[-1]*1000,
+                    losses_3d_valid[-1]*1000))
 
             # Saving the best result
             if losses_3d_valid[-1]*1000 < loss_min:
@@ -174,14 +183,16 @@ if not args.evaluate:
                 import matplotlib.pyplot as plt
 
             plt.figure()
-            epoch_x = np.arange(3, len(losses_3d_train)) + 1
-            plt.plot(epoch_x, losses_3d_train[3:], '--', color='C0')
-            plt.plot(epoch_x, losses_3d_train_eval[3:], color='C0')
-            plt.plot(epoch_x, losses_3d_valid[3:], color='C1')
-            plt.legend(['3d train', '3d train (eval)', '3d valid (eval)'])
-            plt.ylabel('MPJPE (m)')
+            epoch_x = np.arange(1, len(losses_3d_train)) + 1
+            plt.plot(epoch_x, losses_3d_train[1:], '--', color='red')
+            plt.plot(epoch_x,losses_bl_train[1:],'--',color='blue')
+            plt.plot(epoch_x,losses_mpjpe_train[1:],'--',color='green')
+            plt.plot(epoch_x, losses_3d_train_eval[1:], color='orange')
+            plt.plot(epoch_x, losses_3d_valid[1:], color='black')
+            plt.legend(['3d train','bone length loss','mpjpe loss' ,'3d train (eval)', '3d valid (eval)'])
+            plt.ylabel('meter')
             plt.xlabel('Epoch')
-            plt.xlim((3, epoch))
+            plt.xlim((1, epoch))
             plt.savefig(os.path.join(args.checkpoint, 'loss_3d.png'))
             plt.close('all')
 
