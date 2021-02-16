@@ -10,6 +10,16 @@ def mpjpe(predicted, target):
     assert predicted.shape == target.shape
     return torch.mean(torch.norm(predicted - target, dim=len(target.shape) - 1))
 
+def bone_loss(predicted,target):
+    dists_pred = predicted[:, :, 1:] - predicted[:, :, [0,1,2,0,4,5,0,7,8,9,8,11,12,8,14,15]]
+    bone_lengths_pred = torch.mean(torch.norm(dists_pred, dim=3), dim=1)
+    dists_target = target[:, :, 1:] - target[:, :, [ 0,1,2,0,4,5,0,7,8,9,8,11,12,8,14,15]]
+    bone_lengths_target = torch.mean(torch.norm(dists_target, dim=3), dim=1)
+    penalty = torch.mean(torch.abs(torch.mean(bone_lengths_pred, dim=0) \
+                                                     - torch.mean(bone_lengths_target, dim=0)))
+    penalty = penalty*10
+    return penalty
+
 
 def p_mpjpe(predicted, target):
     """
